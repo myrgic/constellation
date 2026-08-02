@@ -25,10 +25,21 @@ CI runs lint + race-enabled tests on every PR (`.github/workflows/ci.yml`).
 
 ## Project layout
 
-- `cmd/constellation/` — CLI entry point
-- `internal/` — protocol primitives: ledger, signatures, peer state
-- `pkg/` — public API surface (import stable)
-- `testdata/` — fixtures for scenario tests
+The repo is flat, not split into `internal/`/`pkg/`. Everything in package `constellation` lives at the root:
+
+- `cmd/constellation/`: thin entry point for `go install`, delegates to `Run()` in the root package
+- `node.go`: node lifecycle (startup, key load/generate, graceful shutdown)
+- `identity.go`: ECDSA P-256 identity (generate, load, sign, verify, NodeID derivation)
+- `ledger.go`: hash-chained event ledger
+- `gitstore.go`: git-backed event storage (events committed as JSON files in a bare repo)
+- `protocol.go`: HTTP handlers for inter-node communication (`/heartbeat`, `/peers`, `/challenge`, `/join`, `/health`, `/state`)
+- `heartbeat.go`: background heartbeat ticker and peer communication
+- `coherence.go`: ledger validation (hash-chain integrity, schema, temporal monotonicity)
+- `constellation.go`: EMA-weighted trust scoring and identity conflict detection
+- `run.go`: CLI entry point (`node`, `inject`, `tamper`, `status` subcommands)
+- `*_test.go`: unit tests, colocated with the code they cover
+- `test/`: shell-driven integration scenarios (happy path, join, drift, theft)
+- `docs/PAPER.md`: the research-paper writeup of the protocol
 
 ## Submitting changes
 
