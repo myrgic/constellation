@@ -40,7 +40,7 @@ This repo specifies and implements the peer-node projection. Other projections l
 | Layer | What | Where |
 |---|---|---|
 | **L1 — Node** | Physical peer machine. ECDSA P-256 keypair, NodeID = SHA-256(pubkey DER), signed heartbeats, git-backed ledger. | This repo. |
-| **L2 — Identity** | Principal (user or agent persona). OIDC-shaped: iss, sub, aud, claims. Global identity, per-audience expressions. | cogos kernel: `kind: Identity` CRD reconciled by `pkg/reconcile`. L1 node keys sign L2 attestations. |
+| **L2 — Identity** | Principal (user or agent persona). OIDC-shaped: iss, sub, aud, claims. Global identity, per-audience expressions. | cogos kernel: `kind: Identity` CRD reconciled by `pkg/reconcile`. L1 node keys are specified to sign L2 attestations, but that wiring is not live: `ConstellationBridge` is currently a no-op (`NilBridge`) pending a stable public API (see cogos ADR-099). |
 | **L3 — Presence** | Ephemeral activation of an L2 identity. Spatial shape (current attention distribution) plus temporal pattern (recent action sequence). | Not stored. Query-derived from the kernel's attention table and bus event log. |
 
 L1 is necessary because peer-to-peer trust needs a stable signing key bound to a verifiable history. L2 is necessary because principals are not the same as machines (one user spans many machines; one machine hosts many agents). L3 is emergent because freezing it as state creates stale-presence bugs and blurs the line between pattern and instance.
@@ -51,7 +51,7 @@ The CogOS workspace model is hierarchical and recursive: a workspace can have an
 
 That hierarchy needs trust to be safe. Constellation is the mechanism: peer nodes verify each other through hash-chained ledgers and EMA-weighted reputation, and trust scores gate which peers can attest to which knowledge. The substrate is what makes "compose workspaces like git remotes, but recursive" actually work without an authority granting permissions from above.
 
-Status: BEP-based workspace sync currently gates peers by static configuration (per-peer `Trusted` flag). Constellation EMA-weighted gating of sync envelopes is in progress against the `ConstellationBridge` seam in the cogos kernel.
+Status: BEP-based workspace sync currently gates peers by static configuration (per-peer `Trusted` flag). Constellation EMA-weighted gating of sync envelopes is specified against the `ConstellationBridge` seam in the cogos kernel, but not yet wired: the seam has one implementation today, a no-op `NilBridge` stub, and the import is blocked on constellation's public API stabilizing (cogos ADR-099).
 
 ## L1 protocol details
 
@@ -130,6 +130,7 @@ The key alone is insufficient because trust is coupled to history, and the hash 
 
 ```bash
 go build -o constellation ./cmd/constellation
+# or: go install github.com/myrgic/constellation/cmd/constellation@v0.2.0
 
 # Terminal 1: Start 3 nodes
 ./constellation node --name alpha --port 8101 --hostname localhost \
@@ -282,7 +283,7 @@ Constellation is one piece of the [CogOS](https://github.com/myrgic/cogos) ecosy
 | [cogos](https://github.com/myrgic/cogos) | The kernel daemon. Workspace state, context assembly, multi-provider inference routing, hash-chained ledger, MCP server, agent harness. |
 | **constellation** | **L1 trust-node protocol (this repo).** |
 | [mod3](https://github.com/myrgic/mod3) | Voice channel. Multi-model TTS with queue-aware output. |
-| [skills](https://github.com/myrgic/skills) | Portable skill definitions for Claude Code and compatible agents. |
+| [plugins](https://github.com/myrgic/plugins) | Portable skill definitions for Claude Code and compatible agents. |
 | [charts](https://github.com/myrgic/charts) | Helm charts for deploying CogOS nodes to Kubernetes. |
 | [research](https://github.com/myrgic/research) | Notes and the training pipeline behind the kernel's design choices. |
 
