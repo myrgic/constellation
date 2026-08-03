@@ -16,6 +16,8 @@ Commit-message convention: [Conventional Commits](https://www.conventionalcommit
 
 ### Fixed
 
+- Docs: the [0.1.0] `go install` line below never worked under the `myrgic/` module path (the v0.1.0 tag's go.mod still declared `github.com/cogos-dev/constellation`, pre-rename). Use `go install github.com/myrgic/constellation/cmd/constellation@v0.2.0` or `go build` per the README's Running section instead.
+
 ## [0.2.0] - 2026-05-08
 
 ### Changed
