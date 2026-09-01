@@ -1,0 +1,65 @@
+# .cogpublic — Public release gate for myrgic/constellation
+# Defines what must never cross the boundary outward.
+#
+# ENFORCED BY: the org-level Public Release Gate workflow
+#   (myrgic/.github/.github/workflows/public-release-gate.yml), run in CI on
+#   every PR. Locally, from a checkout of myrgic/.github:
+#     python3 scripts/cogpublic-guard.py --root /path/to/constellation
+#
+# WHY THIS REPO HAS ONE: sibling repos leaked the exact patterns below three
+# times (mod3 #138/#142, cogos #588, mod3 #146) while a declared-but-
+# unexecuted guard sat in cogos for 4.5 months. A dry-run of the cogos
+# baseline against this repo on 2026-08-31 found ZERO hits (31 files
+# scanned) — the gate exists to keep it that way, mechanically.
+
+version: 1
+
+# Content patterns that block a push. Baseline inherited from the org's
+# leak history; no constellation-specific additions were justified — this
+# repo's history is clean (see rejected-patterns block below).
+content_guards:
+  - pattern: "/Users/slowbro"
+    description: "Hardcoded operator home directory (macOS)"
+  - pattern: "/home/slowbro"
+    description: "Hardcoded operator home directory (Linux)"
+  - pattern: "-Users-slowbro-"
+    description: "Claude project path encoding"
+  - pattern: "192404964621025291"
+    description: "Personal Discord user snowflake"
+  - pattern: 'sk-[a-zA-Z0-9]{20,}'
+    description: "OpenAI API key pattern"
+  - pattern: 'ghp_[a-zA-Z0-9]{20,}'
+    description: "GitHub personal access token"
+  - pattern: 'xoxb-[a-zA-Z0-9]+'
+    description: "Slack bot token"
+  - pattern: '@gmail\.com|@yahoo\.com|@hotmail\.com'
+    description: "Personal email address (git author emails exempt)"
+
+# DELIBERATELY NOT GUARDED, verified 2026-08-31 — recorded so the next
+# person does not "helpfully" add them:
+#
+#   node names / hostnames — constellation's whole subject matter is nodes
+#     addressing each other. A guard on any hostname-shaped string would
+#     flag identity.go, protocol docs, and every test fixture: the repo's
+#     own public API surface. Real hostnames belong in runtime config,
+#     which is not tracked here.
+#
+#   "slowbro" (bare handle) — the operator's public GitHub handle appears
+#     only as git authorship metadata, which is already public on GitHub.
+#     Guarding the bare handle would fire on legitimate attribution.
+#
+# An over-broad guard that fires on legitimate content is worse than no
+# guard: it gets suppressed, and the suppression takes the real findings
+# with it.
+
+# Paths the scan skips. Vendored blobs and caches are not ours to sanitize,
+# and scanning them produces noise that trains people to ignore the gate.
+exclude:
+  - vendor/**
+  - node_modules/**
+  - .venv/**
+  - go.sum
+  - "*.onnx"
+  - "*.pt"
+  - "*.safetensors"
+  - "*.gguf"
