@@ -10,3 +10,5 @@ jobs:
     uses: myrgic/.github/.github/workflows/go-ci.yml@main
     with:
       go-version: '1.24'
+  public-release-gate:
+    uses: myrgic/.github/.github/workflows/public-release-gate.yml@main
